@@ -149,8 +149,10 @@ async def receive_container_photo(message: Message, state: FSMContext, bot: Bot)
 
     # Сверка
     expected_seals = sheets_service.get_seals_for_container(container)
-    recognized_set = set(s.upper() for s in recognized_seals)
-    expected_set = set(s.upper() for s in expected_seals)
+    def normalize(s): return s.upper().lstrip("0") or "0"
+
+    recognized_set = set(normalize(s) for s in recognized_seals)
+    expected_set = set(normalize(s) for s in expected_seals)
     missing = expected_set - recognized_set
     extra = recognized_set - expected_set
 
