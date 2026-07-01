@@ -108,3 +108,47 @@ async def extract_container_number(photo_bytes: bytes) -> str:
     if not raw_text:
         return ""
     return parse_container_number(raw_text)
+
+
+async def extract_passport_data(photo_bytes: bytes) -> dict:
+    """
+    Распознаёт данные с фото паспорта (украинский ID или книжечка).
+    Возвращает словарь с ФИО и номером паспорта.
+    """
+    import re
+    raw_text = await extract_text_from_photo(photo_bytes)
+    if not raw_text:
+        return {"full_name": "", "passport_number": "", "raw_text": ""}
+
+    lines = [line.strip() for line in raw_text.split("\n") if line.strip()]
+
+    # Ищем номер паспорта:
+    # ID-карта: 9 цифр (123456789)
+    # Книжечка: серия АВ + 6 цифр (АВ123456) или латиница AB123456
+    passport_number = ""
+    for line in lines:
+        # Книжечка: две буквы + 6 цифр
+        match = re.search(r'\b([А-ЯA-Z]{2}\d{6})\b', line.upper())
+        if match:
+            passport_number = match.group(1)
+            break
+        # ID-карта: 9 цифр
+        match = re.search(r'\b(\d{9})\b', line)
+        if match:
+            passport_number = match.group(1)
+            break
+
+    # Ищем ФИО — строки из кириллических слов длиннее 3 символов
+    full_name = ""
+    for line in lines:
+        words = line.split()
+        cyrillic_words = [w for w in words if re.match(r'^[А-ЯҐЄІЇа-яґєії\'-]+$', w) and len(w) > 2]
+        if len(cyrillic_words) >= 2:
+            full_name = " ".join(cyrillic_words[:3])
+            break
+
+    return {
+        "full_name": full_name,
+        "passport_number": passport_number,
+        "raw_text": raw_text
+    }
