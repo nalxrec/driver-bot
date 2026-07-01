@@ -1,1 +1,2 @@
-MISE_PYTHON_GITHUB_ATTESTATIONS=false
+[settings]
+python.github_attestations = false
