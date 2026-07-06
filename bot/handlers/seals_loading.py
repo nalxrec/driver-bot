@@ -33,7 +33,7 @@ async def cmd_checkseals(message: Message, state: FSMContext):
     await state.set_state(SealsStates.waiting_for_full_name)
     await message.answer(
         "🔒 Сверка пломб после погрузки.\n\n"
-        "Шаг 1 из 3: Введи своё ФИО полностью.\n"
+        "Шаг 1 из 4: Введи своё ФИО полностью.\n"
         "Например: Иванов Иван Иванович"
     )
 
@@ -45,7 +45,7 @@ async def process_seals_name(message: Message, state: FSMContext):
         return
     await state.update_data(full_name=message.text.strip())
     await state.set_state(SealsStates.waiting_for_phone)
-    await message.answer("Шаг 2 из 3: Введи номер телефона.")
+    await message.answer("Шаг 2 из 4: Введи номер телефона.")
 
 
 @router.message(SealsStates.waiting_for_phone)
@@ -56,7 +56,7 @@ async def process_seals_phone(message: Message, state: FSMContext):
     await state.update_data(phone=message.text.strip())
     await state.set_state(SealsStates.waiting_for_container)
     await message.answer(
-        "Шаг 3 из 3: Введи номер контейнера.\n"
+        "Шаг 3 из 4: Введи номер контейнера.\n"
         "Например: MRKU9448140"
     )
 
@@ -68,22 +68,19 @@ async def process_seals_container(message: Message, state: FSMContext):
         return
 
     container = message.text.strip().upper()
-    await state.update_data(container=container)
-
-    # Проверяем что контейнер есть в таблице
     seals = sheets_service.get_seals_for_container(container)
     if not seals:
         await message.answer(
             f"⚠️ Контейнер «{container}» не найден в таблице.\n"
-            "Проверь номер и попробуй ещё раз, или обратись к диспетчеру."
+            "Проверь номер или обратись к диспетчеру."
         )
         return
 
+    await state.update_data(container=container, seal_photos=[])
     await state.set_state(SealsStates.waiting_for_seals_photo)
-    await state.update_data(seal_photos=[])
     await message.answer(
         f"Контейнер {container} найден ✅\n\n"
-        "Теперь пришли фото пломб.\n"
+        "Шаг 4 из 4 (часть 1): Пришли фото ВСЕХ пломб.\n"
         "Когда пришлёшь все фото — нажми кнопку ниже.",
         reply_markup=done_keyboard()
     )
@@ -105,22 +102,43 @@ async def receive_seal_photo(message: Message, state: FSMContext):
     SealsStates.waiting_for_seals_photo,
     F.text == "✅ Готово, все фото отправил"
 )
-async def process_seals_done(message: Message, state: FSMContext, bot: Bot):
+async def seals_photos_done(message: Message, state: FSMContext):
     data = await state.get_data()
-    photos = data.get("seal_photos", [])
-
-    if not photos:
+    if not data.get("seal_photos"):
         await message.answer("Пришли хотя бы одно фото пломб.", reply_markup=done_keyboard())
         return
 
+    await state.set_state(SealsStates.waiting_for_video)
+    await message.answer(
+        "Фото пломб получены ✅\n\n"
+        "Шаг 4 из 4 (часть 2): Пришли видео осмотра.\n\n"
+        "На видео должны быть видны:\n"
+        "🚛 Тягач (номер и VIN)\n"
+        "📦 Контейнер (номер)\n"
+        "🚚 Прицеп (номер и VIN)\n"
+        "🔒 Все пломбы крупным планом\n\n"
+        "Без видео сверка не будет принята.",
+        reply_markup=main_menu_keyboard()
+    )
+
+
+@router.message(SealsStates.waiting_for_video, F.video)
+async def receive_video(message: Message, state: FSMContext, bot: Bot):
+    video_id = message.video.file_id
+    data = await state.get_data()
+    photos = data.get("seal_photos", [])
     full_name = data.get("full_name")
     phone = data.get("phone")
     container = data.get("container")
 
     await state.clear()
-    await message.answer("Фото получено, ожидай — диспетчер проверяет пломбы.", reply_markup=main_menu_keyboard())
+    await message.answer(
+        "Видео получено ✅\n\n"
+        "Фото получено, ожидай — диспетчер проверяет пломбы.",
+        reply_markup=main_menu_keyboard()
+    )
 
-    # OCR
+    # OCR пломб
     recognized_seals = []
     for photo_id in photos:
         file = await bot.get_file(photo_id)
@@ -131,9 +149,8 @@ async def process_seals_done(message: Message, state: FSMContext, bot: Bot):
     recognized_seals = list(dict.fromkeys(recognized_seals))
 
     expected_seals = sheets_service.get_seals_for_container(container)
-    # Нормализуем номера — убираем ведущие нули для корректного сравнения
-    def normalize(s): return s.upper().lstrip("0") or "0"
 
+    def normalize(s): return s.upper().lstrip("0") or "0"
     recognized_set = set(normalize(s) for s in recognized_seals)
     expected_set = set(normalize(s) for s in expected_seals)
     missing = expected_set - recognized_set
@@ -163,14 +180,35 @@ async def process_seals_done(message: Message, state: FSMContext, bot: Bot):
 
     if config.MODERATION_CHAT_ID:
         mod_chat = int(config.MODERATION_CHAT_ID)
+
+        # Сначала фото пломб
         for photo_id in photos:
             await bot.send_photo(chat_id=mod_chat, photo=photo_id)
+
+        # Потом видео
+        await bot.send_video(
+            chat_id=mod_chat,
+            video=video_id,
+            caption="🎥 Видео осмотра"
+        )
+
+        # Потом отчёт с кнопками
         await bot.send_message(
             chat_id=mod_chat,
             text=report,
             reply_markup=seals_moderation_keyboard(message.from_user.id)
         )
 
+
+@router.message(SealsStates.waiting_for_video)
+async def video_not_video(message: Message):
+    await message.answer(
+        "Нужно прислать именно видео.\n\n"
+        "Сними видео с тягачом, контейнером, прицепом, пломбами и VIN кодами."
+    )
+
+
+# ─── Кнопки диспетчера ───────────────────────────────────────────────────────
 
 @router.callback_query(F.data.startswith("seals_ok:"))
 async def seals_approved(callback: CallbackQuery, bot: Bot):
