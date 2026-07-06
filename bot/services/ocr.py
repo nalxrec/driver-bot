@@ -184,3 +184,49 @@ async def extract_passport_data(photo_bytes: bytes) -> dict:
         "passport_number": passport_number,
         "raw_text": raw_text
     }
+
+
+async def extract_license_data(photo_bytes: bytes) -> dict:
+    """
+    Распознаёт данные с фото водительского удостоверения.
+    Возвращает серию, номер и дату рождения.
+    """
+    import re
+
+    raw_text = await extract_text_from_photo(photo_bytes)
+    if not raw_text:
+        return {"series": "", "number": "", "birth_date": "", "raw_text": ""}
+
+    lines = [line.strip() for line in raw_text.split("\n") if line.strip()]
+
+    # Ищем номер ПВ — украинские права: 3 буквы + 6 цифр (ДКМ123456)
+    # или просто 6 цифр отдельно
+    series = ""
+    number = ""
+
+    for line in lines:
+        # Формат: ДКМ123456 или AAA123456
+        match = re.search(r'\b([А-ЯҐЄІЇA-Z]{2,3})[\s\-]?(\d{6})\b', line.upper())
+        if match:
+            series = match.group(1)
+            number = match.group(2)
+            break
+        # Просто 6 цифр
+        match = re.search(r'\b(\d{6})\b', line)
+        if match and not number:
+            number = match.group(1)
+
+    # Ищем дату рождения — формат ДД.ММ.РРРР или ДД/ММ/РРРР
+    birth_date = ""
+    for line in lines:
+        match = re.search(r'\b(\d{2}[\.\-\/]\d{2}[\.\-\/]\d{4})\b', line)
+        if match:
+            birth_date = match.group(1).replace("-", ".").replace("/", ".")
+            break
+
+    return {
+        "series": series,
+        "number": number,
+        "birth_date": birth_date,
+        "raw_text": raw_text
+    }
