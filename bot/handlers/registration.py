@@ -168,8 +168,11 @@ async def process_license(message: Message, state: FSMContext, bot: Bot):
 
     await state.set_state(RegistrationStates.waiting_for_truck_doc)
     await message.answer(
-        "Шаг 4 из 7: Пришли фото техпаспорта ТЯГАЧА.\n"
-        "Страница с VIN номером должна быть чётко видна."
+        "Шаг 4 из 7: Пришли фото техпаспорта ТЯГАЧА.\n\n"
+        "📸 Сфотографируй техпаспорт с обеих сторон:\n"
+        "• Лицевая сторона (марка, госномер)\n"
+        "• Обратная сторона (VIN номер)\n\n"
+        "Пришли оба фото по очереди, затем переходим к следующему шагу."
     )
 
 
@@ -186,8 +189,12 @@ async def process_truck_doc(message: Message, state: FSMContext):
     await state.set_state(RegistrationStates.waiting_for_truck_vin)
     await message.answer(
         "Техпаспорт тягача получен ✅\n\n"
-        "Шаг 5 из 7: Пришли фото VIN номера на тягаче.\n"
-        "Табличка с VIN обычно на стойке двери или под капотом."
+        "Шаг 5 из 7: Пришли фото VIN номера на ТЯГАЧЕ.\n\n"
+        "📍 Где найти VIN на тягаче:\n"
+        "• Табличка на стойке водительской двери\n"
+        "• Под капотом на раме\n"
+        "• На лобовом стекле снизу\n\n"
+        "⚠️ Фотографируй VIN непосредственно на машине, не в документах."
     )
 
 
@@ -204,8 +211,11 @@ async def process_truck_vin(message: Message, state: FSMContext):
     await state.set_state(RegistrationStates.waiting_for_trailer_doc)
     await message.answer(
         "Фото VIN тягача получено ✅\n\n"
-        "Шаг 6 из 7: Пришли фото техпаспорта ПРИЦЕПА.\n"
-        "Страница с VIN номером должна быть чётко видна."
+        "Шаг 6 из 7: Пришли фото техпаспорта ПРИЦЕПА.\n\n"
+        "📸 Сфотографируй техпаспорт с обеих сторон:\n"
+        "• Лицевая сторона (марка, госномер)\n"
+        "• Обратная сторона (VIN номер)\n\n"
+        "Пришли оба фото по очереди."
     )
 
 
@@ -222,7 +232,11 @@ async def process_trailer_doc(message: Message, state: FSMContext):
     await state.set_state(RegistrationStates.waiting_for_trailer_vin)
     await message.answer(
         "Техпаспорт прицепа получен ✅\n\n"
-        "Шаг 7 из 7: Пришли фото VIN номера на прицепе."
+        "Шаг 7 из 7: Пришли фото VIN номера на ПРИЦЕПЕ.\n\n"
+        "📍 Где найти VIN на прицепе:\n"
+        "• Табличка на раме прицепа\n"
+        "• На передней балке\n\n"
+        "⚠️ Фотографируй VIN непосредственно на прицепе, не в документах."
     )
 
 
