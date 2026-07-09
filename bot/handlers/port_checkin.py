@@ -208,15 +208,4 @@ async def port_approved(callback: CallbackQuery, bot: Bot):
     await callback.answer("Водитель допущен к въезду.")
 
 
-@router.callback_query(F.data.startswith("port_fail:"))
-async def port_rejected(callback: CallbackQuery, bot: Bot):
-    driver_tg_id = int(callback.data.split(":")[1])
-    await bot.send_message(
-        chat_id=driver_tg_id,
-        text="❌ ВЪЕЗД НЕ РАЗРЕШЁН\n\nДиспетчер обнаружил несоответствие.\nСвяжитесь с диспетчером."
-    )
-    await callback.message.edit_caption(
-        caption=callback.message.caption + f"\n\n❌ ОТКАЗАНО: {callback.from_user.full_name}",
-        reply_markup=None
-    )
-    await callback.answer("Водителю отказано во въезде.")
+

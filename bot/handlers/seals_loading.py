@@ -224,15 +224,4 @@ async def seals_approved(callback: CallbackQuery, bot: Bot):
     await callback.answer("Водитель уведомлён.")
 
 
-@router.callback_query(F.data.startswith("seals_fail:"))
-async def seals_rejected(callback: CallbackQuery, bot: Bot):
-    driver_tg_id = int(callback.data.split(":")[1])
-    await bot.send_message(
-        chat_id=driver_tg_id,
-        text="❌ Диспетчер обнаружил проблему с пломбами.\nСвяжитесь с диспетчером."
-    )
-    await callback.message.edit_text(
-        text=callback.message.text + f"\n\n❌ ПРОБЛЕМА: {callback.from_user.full_name}",
-        reply_markup=None
-    )
-    await callback.answer("Водитель уведомлён.")
+

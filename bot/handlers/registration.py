@@ -356,20 +356,4 @@ async def approve_driver(callback: CallbackQuery, bot: Bot):
     await callback.answer("Водитель уведомлён.")
 
 
-@router.callback_query(F.data.startswith("verify_reject:"))
-async def reject_driver(callback: CallbackQuery, bot: Bot):
-    driver_tg_id = int(callback.data.split(":")[1])
-    set_driver_status(driver_tg_id, "rejected")
-    await bot.send_message(
-        chat_id=driver_tg_id,
-        text=(
-            "❌ Верификация не пройдена.\n\n"
-            "Обратитесь к диспетчеру.\n\n"
-            "Попробуй снова: /register"
-        )
-    )
-    await callback.message.edit_caption(
-        caption=callback.message.caption + f"\n\n❌ ОТКЛОНЕНО: {callback.from_user.full_name}",
-        reply_markup=None
-    )
-    await callback.answer("Водитель уведомлён.")
+
