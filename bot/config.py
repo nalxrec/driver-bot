@@ -31,3 +31,7 @@ if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN не задан в .env")
 if not GOOGLE_SHEET_ID:
     raise RuntimeError("GOOGLE_SHEET_ID не задан в .env")
+
+TOPIC_VERIFICATION = int(os.getenv("TOPIC_VERIFICATION", "2"))
+TOPIC_SEALS = int(os.getenv("TOPIC_SEALS", "4"))
+TOPIC_PORT = int(os.getenv("TOPIC_PORT", "6"))

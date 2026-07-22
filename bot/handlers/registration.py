@@ -277,14 +277,15 @@ async def process_trailer_vin(message: Message, state: FSMContext, bot: Bot):
         return
 
     mod_chat = int(config.MODERATION_CHAT_ID)
+    topic_id = config.TOPIC_VERIFICATION
 
     # 1. Паспорт
     if data.get("passport_photo_id"):
-        await bot.send_photo(chat_id=mod_chat, photo=data["passport_photo_id"], caption="📄 Паспорт")
+        await bot.send_photo(chat_id=mod_chat, message_thread_id=topic_id, photo=data["passport_photo_id"], caption="📄 Паспорт")
 
     # 2. Селфи
     if data.get("selfie_photo_id"):
-        await bot.send_photo(chat_id=mod_chat, photo=data["selfie_photo_id"], caption="🤳 Селфи водителя")
+        await bot.send_photo(chat_id=mod_chat, message_thread_id=topic_id, photo=data["selfie_photo_id"], caption="🤳 Селфи водителя")
 
     # 3. Права + кнопка проверки
     if data.get("license_photo_id"):
@@ -303,15 +304,15 @@ async def process_trailer_vin(message: Message, state: FSMContext, bot: Bot):
 
     # 4. Техпаспорт тягача
     if data.get("truck_doc_photo_id"):
-        await bot.send_photo(chat_id=mod_chat, photo=data["truck_doc_photo_id"], caption="🚛 Техпаспорт тягача")
+        await bot.send_photo(chat_id=mod_chat, message_thread_id=topic_id, photo=data["truck_doc_photo_id"], caption="🚛 Техпаспорт тягача")
 
     # 5. VIN тягача
     if data.get("truck_vin_photo_id"):
-        await bot.send_photo(chat_id=mod_chat, photo=data["truck_vin_photo_id"], caption="🔢 VIN тягача (на машине)")
+        await bot.send_photo(chat_id=mod_chat, message_thread_id=topic_id, photo=data["truck_vin_photo_id"], caption="🔢 VIN тягача (на машине)")
 
     # 6. Техпаспорт прицепа
     if data.get("trailer_doc_photo_id"):
-        await bot.send_photo(chat_id=mod_chat, photo=data["trailer_doc_photo_id"], caption="🚚 Техпаспорт прицепа")
+        await bot.send_photo(chat_id=mod_chat, message_thread_id=topic_id, photo=data["trailer_doc_photo_id"], caption="🚚 Техпаспорт прицепа")
 
     # 7. VIN прицепа + итоговая карточка + кнопки
     caption = (

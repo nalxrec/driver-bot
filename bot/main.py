@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 
 from bot import config
 from bot.db.database import init_db
-from bot.handlers import start, registration, seals_loading, port_checkin, moderation, debug_chat_id
+from bot.handlers import start, registration, seals_loading, port_checkin, moderation
 
 
 async def main():
@@ -21,7 +21,7 @@ async def main():
     dp.include_router(seals_loading.router)
     dp.include_router(port_checkin.router)
     dp.include_router(moderation.router)
-    dp.include_router(debug_chat_id.router)  # ВРЕМЕННО
+    
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
