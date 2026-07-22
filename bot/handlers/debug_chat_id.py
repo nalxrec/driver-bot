@@ -1,7 +1,6 @@
 """
-ВРЕМЕННЫЙ файл — нужен только чтобы один раз узнать ID группы модерации.
-После того как впишешь MODERATION_CHAT_ID в .env, этот файл и его подключение
-в main.py можно удалить.
+ВРЕМЕННЫЙ файл — нужен только чтобы узнать ID тем в группе модерации.
+После получения всех ID — удалить этот файл и убрать из main.py.
 """
 
 from aiogram import Router
@@ -11,6 +10,12 @@ router = Router()
 
 
 @router.message()
-async def show_chat_id(message: Message):
-    print(f"\n=== ID этого чата: {message.chat.id} (название: {message.chat.title or message.chat.full_name}) ===\n")
-    await message.answer(f"ID этого чата: `{message.chat.id}`", parse_mode="Markdown")
+async def show_topic_id(message: Message):
+    chat_id = message.chat.id
+    topic_id = message.message_thread_id
+    print(f"\n=== Группа ID: {chat_id} | Тема ID: {topic_id} ===\n")
+    await message.answer(
+        f"Chat ID: `{chat_id}`\n"
+        f"Topic ID: `{topic_id}`",
+        parse_mode="Markdown"
+    )
