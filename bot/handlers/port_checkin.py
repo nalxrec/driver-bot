@@ -184,7 +184,7 @@ async def receive_container_photo(message: Message, state: FSMContext, bot: Bot)
 
     if config.MODERATION_CHAT_ID:
         mod_chat = int(config.MODERATION_CHAT_ID)
-    topic_id = config.TOPIC_PORT
+        topic_id = config.TOPIC_PORT
         for photo_id in seal_photos:
             await bot.send_photo(chat_id=mod_chat, message_thread_id=topic_id, photo=photo_id)
         await bot.send_photo(
